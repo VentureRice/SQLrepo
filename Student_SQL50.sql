@@ -70,3 +70,28 @@ insert into Score values('07' , '03' , 98);
 select * from Score;
 select * from Student;
 select * from Teacher;
+
+-- 1、查询"01"课程比"02"课程成绩高的学生的信息及课程分数 
+
+select student.*,a.s_id,a.s_score as s1,b.s_score as s2 from(
+select * from Score where c_id='01') a
+left join(
+select * from Score where c_id='02') b
+on a.s_id=b.s_id
+left join student
+on student.s_id=a.s_id
+where a.s_score>b.s_score;
+
+
+select st.*,sc.s_score as '语文' ,sc2.s_score '数学' 
+from student st
+left join score sc on sc.s_id=st.s_id and sc.c_id='01' 
+left join score sc2 on sc2.s_id=st.s_id and sc2.c_id='02'  
+where sc.s_score>sc2.s_score;
+
+-- 2、查询"01"课程比"02"课程成绩低的学生的信息及课程分数
+
+select st.*,s1.s_score score1,s2.s_score score2 from student st
+left join score s1 on s1.s_id=st.s_id and s1.c_id='01'
+left join score s2 on s2.s_id=st.s_id and s2.c_id='02'
+where s1.s_score<s2.s_score;
