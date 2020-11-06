@@ -95,3 +95,23 @@ select st.*,s1.s_score score1,s2.s_score score2 from student st
 left join score s1 on s1.s_id=st.s_id and s1.c_id='01'
 left join score s2 on s2.s_id=st.s_id and s2.c_id='02'
 where s1.s_score<s2.s_score;
+
+-- 3、查询平均成绩大于等于60分的同学的学生编号和学生姓名和平均成绩
+
+select a.s_id,st.s_name,a.avg_sc from(
+select sc.s_id,avg(sc.s_score) avg_sc from Score sc
+group by s_id
+having avg_sc>=60) a
+left join student st
+on st.s_id=a.s_id;
+
+select st.s_id,st.s_name,ROUND(AVG(sc.s_score),2) "平均成绩" from student st
+left join score sc on sc.s_id=st.s_id
+group by st.s_id having AVG(sc.s_score)>=60;
+
+-- 4、查询平均成绩小于60分的同学的学生编号和学生姓名和平均成绩
+        -- (包括有成绩的和无成绩的)
+        
+select st.s_id,st.s_name,(case when ROUND(AVG(sc.s_score),2) is null then 0 else ROUND(AVG(sc.s_score),2) end ) "平均成绩" from student st
+left join score sc on sc.s_id=st.s_id
+group by st.s_id having AVG(sc.s_score)<60 or AVG(sc.s_score) is NULL;
