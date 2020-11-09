@@ -115,3 +115,10 @@ group by st.s_id having AVG(sc.s_score)>=60;
 select st.s_id,st.s_name,(case when ROUND(AVG(sc.s_score),2) is null then 0 else ROUND(AVG(sc.s_score),2) end ) "平均成绩" from student st
 left join score sc on sc.s_id=st.s_id
 group by st.s_id having AVG(sc.s_score)<60 or AVG(sc.s_score) is NULL;
+
+
+-- 5、查询所有同学的学生编号、学生姓名、选课总数、所有课程的总成绩
+select st.s_id,st.s_name,count(sc.c_id) "选课总数",sum(case when sc.s_score is null then 0 else sc.s_score end) "总成绩" 
+from student st 
+left join score sc on st.s_id = sc.s_id 
+group by st.s_id;
