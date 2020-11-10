@@ -122,3 +122,28 @@ select st.s_id,st.s_name,count(sc.c_id) "选课总数",sum(case when sc.s_score 
 from student st 
 left join score sc on st.s_id = sc.s_id 
 group by st.s_id;
+
+-- 6、查询"李"姓老师的数量 
+select count(t.t_name) from teacher t
+where t.t_name like '李%';
+-- 7、查询学过"张三"老师授课的同学的信息 
+select st.* from teacher t 
+left join course c on t.t_id=c.t_id
+left join score sc on c.c_id=sc.c_id
+left join student st on sc.s_id=st.s_id
+where t.t_name = '张三';
+
+-- 8、查询没学过"张三"老师授课的同学的信息
+select b.* from student b
+where b.s_name not in (
+select st.s_name from teacher t 
+left join course c on t.t_id=c.t_id
+left join score sc on c.c_id=sc.c_id
+left join student st on sc.s_id=st.s_id
+where t.t_name = '张三');
+
+-- 9、查询学过编号为"01"并且也学过编号为"02"的课程的同学的信息
+select st.* from student st
+right join score s1 on s1.s_id=st.s_id
+right join score s2 on s2.s_id=st.s_id
+where s1.c_id='01' and s2.c_id='02';
