@@ -168,3 +168,134 @@ select st2.s_id from student st2
 inner join score sc2 on sc2.s_id = st2.s_id
 inner join course c2 on c2.c_id=sc2.c_id and c2.c_id="02"
 );
+
+-- 11、查询没有学全所有课程的同学的信息
+-- 少了全都没选的
+select st.* from score sc
+left join student st
+on sc.s_id=st.s_id
+group by sc.s_id
+having sum(case when sc.s_id is null then 0 else 1 end)<3;
+
+select * from student where s_id not in (
+select st.s_id from student st 
+inner join score sc on sc.s_id = st.s_id and sc.c_id="01"
+where st.s_id  in (
+select st1.s_id from student st1 
+inner join score sc2 on sc2.s_id = st1.s_id and sc2.c_id="02"
+) and st.s_id in (
+select st2.s_id from student st2 
+inner join score sc2 on sc2.s_id = st2.s_id and sc2.c_id="03"
+));
+
+
+-- 12、查询至少有一门课与学号为"01"的同学所学相同的同学的信息
+select distinct st.* from score sc
+inner join student st
+on st.s_id=sc.s_id
+where sc.c_id in(
+select c_id from score
+where s_id='01');
+
+
+-- 13、查询和"01"号的同学学习的课程完全相同的其他同学的信息
+select st.* from student st
+left join score sc on st.s_id=sc.s_id
+group by st.s_id
+having group_concat(sc.c_id order by sc.c_id) = (
+select  group_concat(sc2.c_id order by sc2.c_id) from score sc2
+where sc2.s_id ='01');
+
+-- 14、查询没学过"张三"老师讲授的任一门课程的学生姓名
+select st.s_name from student st where st.s_id not in ( 
+select sc.s_id from score sc
+inner join course c on sc.c_id=c.c_id
+inner join teacher t on c.t_id=t.t_id
+where t.t_name='张三');
+
+-- 15、查询两门及其以上不及格课程的同学的学号，姓名及其平均成绩
+select st.*,
+	   avg(sc.s_score) avg_sc,
+	   sum(case when sc.s_score<60 then 1 else 0 end) failed from score sc
+inner join student st on st.s_id=sc.s_id
+group by sc.s_id
+having failed>=2;
+
+-- 16、检索"01"课程分数小于60，按分数降序排列的学生信息
+select st.*,sc.s_score from score sc
+inner join student st on sc.s_id=st.s_id
+where sc.s_score<60 and sc.c_id='01'
+order by sc.s_score desc;
+
+-- 17、按平均成绩从高到低显示所有学生的所有课程的成绩以及平均成绩
+select sc1.s_id,sc1.s_score s1,sc2.s_score s2,sc3.s_score s3,avg(sc4.s_score) avg_sc from score sc1 
+left join score sc2 on sc1.s_id=sc2.s_id
+left join score sc3 on sc1.s_id=sc3.s_id
+left join score sc4 on sc1.s_id=sc4.s_id
+where sc1.c_id='01' and sc2.c_id='02' and sc3.c_id='03'
+group by sc1.s_id
+order by avg_sc desc;
+
+select st.*,s1.score1,s2.score2,s3.score3,avg(s4.score4) avg_score from student st 
+left join( select sc1.s_id,sc1.s_score score1 from score sc1
+where sc1.c_id='01') s1 on s1.s_id=st.s_id 
+left join( select sc2.s_id,sc2.s_score score2 from score sc2
+where sc2.c_id='02') s2 on s2.s_id=st.s_id 
+left join( select sc3.s_id,sc3.s_score score3 from score sc3
+where sc3.c_id='03') s3 on s3.s_id=st.s_id 
+left join( select sc4.s_id,sc4.s_score score4 from score sc4) 
+s4 on s4.s_id=st.s_id 
+group by st.s_id
+order by avg_score desc;
+
+-- 18.查询各科成绩最高分、最低分和平均分：以如下形式显示：课程ID，课程name，最高分，最低分，平均分，及格率，中等率，优良率，优秀率
+-- 及格为>=60，中等为：70-80，优良为：80-90，优秀为：>=90
+select sc.c_id,c.c_name,max(sc.s_score) '最高分',
+	   min(sc.s_score) '最低分',
+       avg(sc.s_score) '平均分',
+       avg(case when sc.s_score>=60 then 1 else 0 end) '及格率'from score sc
+inner join course c
+on sc.c_id = c.c_id
+group by sc.c_id;
+
+-- 19、按各科成绩进行排序，并显示排名(实现不完全)
+
+select * from score;
+
+
+-- 20、查询学生的总成绩并进行排名
+select st.*,sum(case when sc.s_score is null then 0 else sc.s_score end) total from student st
+left join score sc on st.s_id = sc.s_id
+group by st.s_id
+order by total desc;
+
+select st.*,sum(coalesce(sc.s_score,0)) total from student st
+left join score sc on st.s_id = sc.s_id
+group by st.s_id
+order by total desc;
+
+-- 21、查询不同老师所教不同课程平均分从高到低显示 
+select t.t_id,c.c_id,avg(sc.s_score) from teacher t
+left join course c on c.t_id = t.t_id
+left join score sc on sc.c_id = c.c_id
+group by t.t_id;
+
+SELECT 
+    t.t_id, t.t_name, c.c_name, AVG(sc.s_score)
+FROM
+    teacher t
+        LEFT JOIN
+    course c ON c.t_id = t.t_id
+        LEFT JOIN
+    score sc ON sc.c_id = c.c_id
+GROUP BY t.t_id
+ORDER BY AVG(sc.s_score) DESC;
+
+
+select t.t_id,c.c_id,sc.s_score from teacher t
+left join course c on c.t_id = t.t_id
+left join score sc on sc.c_id = c.c_id
+group by t.t_id and c.c_id;
+
+
+select * from course;
