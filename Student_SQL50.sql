@@ -496,3 +496,96 @@ GROUP BY t.t_id
 ORDER BY mean DESC;
 
 
+-- 22、查询所有课程的成绩第2名到第3名的学生信息及该课程成绩
+select st.*,a.c_id,c.c_name,a.s_score from (
+select sc.*,row_number() over (partition by sc.c_id order by sc.s_score desc) as 'r' from score sc) a
+left join student st on a.s_id = st.s_id
+left join course c on c.c_id = a.c_id
+where a.r between 2 and 3;
+
+select a.* from (
+select st.*,c.c_id,c.c_name,sc.s_score from student st
+left join score sc on sc.s_id=st.s_id
+inner join course c on c.c_id =sc.c_id and c.c_id="01"
+order by sc.s_score desc LIMIT 1,2 ) a
+union all
+select b.* from (
+select st.*,c.c_id,c.c_name,sc.s_score from student st
+left join score sc on sc.s_id=st.s_id
+inner join course c on c.c_id =sc.c_id and c.c_id="02"
+order by sc.s_score desc LIMIT 1,2) b
+union all
+select c.* from (
+select st.*,c.c_id,c.c_name,sc.s_score from student st
+left join score sc on sc.s_id=st.s_id
+inner join course c on c.c_id =sc.c_id and c.c_id="03"
+order by sc.s_score desc LIMIT 1,2) c;
+
+-- 23、统计各科成绩各分数段人数：课程编号,课程名称,[100-85],[85-70],[70-60],[0-60]及所占百分比
+SELECT 
+    sc.c_id,
+    c.c_name,
+    SUM(CASE
+        WHEN sc.s_score >= 85 THEN 1
+        ELSE 0
+    END) AS '[100-85]',
+    AVG(CASE
+        WHEN sc.s_score >= 85 THEN 1
+        ELSE 0
+    END) AS '[100-85]占比'
+FROM
+    score sc
+        LEFT JOIN
+    course c ON sc.c_id = c.c_id
+GROUP BY sc.c_id;
+
+-- 24、查询学生平均成绩及其名次 
+select *, row_number() over(order by a.mean desc) from(
+select st.*,avg(coalesce(sc.s_score,0)) mean from student st
+left join score sc on st.s_id=sc.s_id
+group by st.s_id
+order by sc.s_score desc) a;
+
+-- 25、查询各科成绩前三名的记录
+select a.* from(
+select sc.*,row_number() over (partition by sc.c_id order by sc.s_score desc) as r from score sc) a
+where a.r<=3;
+
+-- 26、查询每门课程被选修的学生数 
+SELECT 
+    c.*, COUNT(DISTINCT sc.s_id) num
+FROM
+    course c
+        LEFT JOIN
+    score sc ON c.c_id = sc.c_id
+GROUP BY c.c_id;
+
+-- 27、查询出只有两门课程的全部学生的学号和姓名
+SELECT 
+    st.*, COUNT(1) count
+FROM
+    student st
+        LEFT JOIN
+    score sc ON st.s_id = sc.s_id
+GROUP BY sc.s_id
+HAVING count = 2;
+
+-- 28、查询男生、女生人数
+SELECT 
+    st.s_sex, COUNT(1)
+FROM
+    student st
+GROUP BY st.s_sex;
+
+-- 29、查询名字中含有"风"字的学生信息
+SELECT 
+    st.*
+FROM
+    student st
+WHERE
+    st.s_name LIKE '%风%';
+
+
+
+
+
